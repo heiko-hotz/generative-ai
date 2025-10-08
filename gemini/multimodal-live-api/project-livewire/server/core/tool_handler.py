@@ -21,13 +21,43 @@ from typing import Any, Dict
 from urllib.parse import urlencode
 
 import aiohttp
+import asyncio
 from config.config import CLOUD_FUNCTIONS
+
+# from server.computer_agent.runner import run_computer_agent_task
+
 
 logger = logging.getLogger(__name__)
 
 
 async def execute_tool(tool_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
     """Execute a tool based on name and parameters by calling the corresponding cloud function"""
+
+    # Handle the new local computer task
+    if tool_name == "execute_computer_task":
+        from computer_agent.runner import run_computer_agent_task
+        query = params.get("query")
+        if not query:
+            return {"error": "Missing query parameter for execute_computer_task"}
+
+        logger.info(f"Executing computer task with query: {query}")
+
+        # The computer agent is a synchronous, long-running task.
+        # We must run it in a separate thread to avoid blocking the server's event loop.
+        loop = asyncio.get_running_loop()
+        try:
+            # run_in_executor runs the blocking function in a thread pool
+            result = await loop.run_in_executor(
+                None,  # Use the default executor
+                run_computer_agent_task,
+                query
+            )
+            logger.info(f"Computer task finished with result: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"Error running computer agent task in executor: {e}")
+            return {"error": f"Failed to execute computer task: {e}"}
+
     try:
         if tool_name not in CLOUD_FUNCTIONS:
             logger.error(f"Tool not found: {tool_name}")

@@ -126,7 +126,7 @@ logger.info(f"System instructions: {SYSTEM_INSTRUCTIONS}")
 
 # Gemini Configuration
 CONFIG = {
-    "generation_config": {"response_modalities": ["AUDIO"], "speech_config": VOICE},
+    "generation_config": {"response_modalities": ["AUDIO"], "speech_config": {"voice_config": {"prebuilt_voice_config": {"voice_name": VOICE}}}},
     "tools": [
         {
             "function_declarations": [
@@ -144,6 +144,20 @@ CONFIG = {
                         "required": ["city"],
                     },
                 },
+                {
+                    "name": "execute_computer_task",
+                    "description": "Executes a browser automation task based on a natural language query. Use this for tasks involving web browsing, searching, clicking, typing, or navigating websites.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "The detailed, natural language instruction for the web task. For example: 'Go to Google and search for flights from London to Munich'."
+                            }
+                        },
+                        "required": ["query"]
+                    }
+                }
             ]
         }
     ],
