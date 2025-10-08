@@ -81,11 +81,13 @@ class PlaywrightComputer(Computer):
         initial_url: str = "https://www.google.com",
         search_engine_url: str = "https://www.google.com",
         highlight_mouse: bool = False,
+        persistent_user_data_dir: str = None,
     ):
         self._initial_url = initial_url
         self._screen_size = screen_size
         self._search_engine_url = search_engine_url
         self._highlight_mouse = highlight_mouse
+        self._user_data_dir = persistent_user_data_dir
 
     def _handle_new_page(self, new_page: playwright.sync_api.Page):
         """The Computer Use model only supports a single tab at the moment.
@@ -97,57 +99,48 @@ class PlaywrightComputer(Computer):
         new_page.close()
         self._page.goto(new_url)
 
+    # 2. Update __enter__ to handle both normal and persistent modes
     def __enter__(self):
         print("Creating session...")
         self._playwright = sync_playwright().start()
-        self._browser = self._playwright.chromium.launch(
-            args=[
-                "--disable-extensions",
-                "--disable-file-system",
-                "--disable-plugins",
-                "--disable-dev-shm-usage",
-                "--disable-background-networking",
-                "--disable-default-apps",
-                "--disable-sync",
-                # No '--no-sandbox' arg means the sandbox is on.
-            ],
-            # headless=bool(os.environ.get("PLAYWRIGHT_HEADLESS", False)),
-            headless=False,
-        )
-        self._context = self._browser.new_context(
-            viewport={
-                "width": self._screen_size[0],
-                "height": self._screen_size[1],
-            }
-        )
-        self._page = self._context.new_page()
-        self._page.goto(self._initial_url)
+        self._browser = None # Initialize to None
 
+        if self._user_data_dir:
+            # PERSISTENT MODE: Launch with a user profile
+            self._context = self._playwright.chromium.launch_persistent_context(
+                self._user_data_dir,
+                headless=False, # Force visible browser
+                args=["--disable-extensions", "--disable-sync"],
+                viewport={"width": self._screen_size[0], "height": self._screen_size[1]}
+            )
+        else:
+            # NORMAL MODE: Launch a fresh browser
+            self._browser = self._playwright.chromium.launch(
+                headless=False, # Force visible browser for now
+                args=["--disable-extensions", "--disable-sync"]
+            )
+            self._context = self._browser.new_context(
+                viewport={"width": self._screen_size[0], "height": self._screen_size[1]}
+            )
+
+        # Common setup for both modes
+        self._page = self._context.pages[0] if self._context.pages else self._context.new_page()
+        self._page.goto(self._initial_url)
         self._context.on("page", self._handle_new_page)
 
-        termcolor.cprint(
-            f"Started local playwright.",
-            color="green",
-            attrs=["bold"],
-        )
+        termcolor.cprint("Started local playwright.", color="green", attrs=["bold"])
         return self
 
+    # 3. Update __exit__ to be compatible with both modes
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._context:
             self._context.close()
-        try:
+        # The browser object only exists in normal (non-persistent) mode
+        if self._browser:
             self._browser.close()
-        except Exception as e:
-            # Browser was already shut down because of SIGINT or such.
-            if "Browser.close: Connection closed while reading from the driver" in str(
-                e
-            ):
-                pass
-            else:
-                raise
-
         self._playwright.stop()
 
+        
     def open_web_browser(self) -> EnvState:
         return self.current_state()
 
