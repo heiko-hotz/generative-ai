@@ -16,7 +16,6 @@
 Tool execution and handling for Gemini Multimodal Live Proxy Server
 """
 
-# Replace the entire contents of server/core/tool_handler.py with this:
 
 import logging
 import aiohttp
@@ -29,7 +28,6 @@ from computer_agent.runner import agent_stop_event, run_computer_agent_task
 
 logger = logging.getLogger(__name__)
 
-# --- Global State for the Background Task ---
 background_task = None
 
 async def run_and_log_task(coro, query: str, genai_session: Any):

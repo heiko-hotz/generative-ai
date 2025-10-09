@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import os
 from typing import Literal, Optional, Union, Any
 from google import genai
@@ -414,7 +415,7 @@ class BrowserAgent:
                 print("Stop event received, terminating agent loop.")
                 self.final_reasoning = "Task was cancelled by the user."
                 break # Exit the loop immediately
-            
+
             status = self.run_one_iteration()
 
     def denormalize_x(self, x: int) -> int:

@@ -1,10 +1,22 @@
-# file: server/computer_agent/runner.py
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import threading
 from .agent import BrowserAgent
 from .computers.playwright.playwright import PlaywrightComputer
 
-# --- Global State for the Browser ---
 # This variable will hold our single, persistent browser instance.
 browser_env = None
 # This Event will act as our interrupt signal for the agent's thread.
@@ -15,7 +27,7 @@ def run_computer_agent_task(query: str) -> dict:
     Uses a global browser instance to run a BrowserAgent task.
     The browser will remain open after the task is complete.
     """
-    global browser_env  # Declare that we intend to modify the global variable
+    global browser_env 
 
     print(f"Computer Agent Task Started for query: '{query}'")
     final_summary = "Task completed, but no final summary was generated."
