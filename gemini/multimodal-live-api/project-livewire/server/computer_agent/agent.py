@@ -27,6 +27,7 @@ from google.genai.types import (
 import time
 from rich.console import Console
 from rich.table import Table
+import threading
 
 from .computers import EnvState, Computer
 
@@ -67,11 +68,13 @@ class BrowserAgent:
         query: str,
         model_name: str,
         verbose: bool = True,
+        stop_event: threading.Event = None,
     ):
         self._browser_computer = browser_computer
         self._query = query
         self._model_name = model_name
         self._verbose = verbose
+        self._stop_event = stop_event
         self.final_reasoning = None
         self._client = genai.Client(
             api_key=os.environ.get("GEMINI_API_KEY"),
@@ -407,6 +410,11 @@ class BrowserAgent:
     def agent_loop(self):
         status = "CONTINUE"
         while status == "CONTINUE":
+            if self._stop_event and self._stop_event.is_set():
+                print("Stop event received, terminating agent loop.")
+                self.final_reasoning = "Task was cancelled by the user."
+                break # Exit the loop immediately
+            
             status = self.run_one_iteration()
 
     def denormalize_x(self, x: int) -> int:

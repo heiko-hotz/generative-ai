@@ -130,20 +130,20 @@ CONFIG = {
     "tools": [
         {
             "function_declarations": [
-                {
-                    "name": "get_weather",
-                    "description": "Get weather information for a location",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "city": {
-                                "type": "string",
-                                "description": "The city or location to get weather for",
-                            }
-                        },
-                        "required": ["city"],
-                    },
-                },
+                # {
+                #     "name": "get_weather",
+                #     "description": "Get weather information for a location",
+                #     "parameters": {
+                #         "type": "object",
+                #         "properties": {
+                #             "city": {
+                #                 "type": "string",
+                #                 "description": "The city or location to get weather for",
+                #             }
+                #         },
+                #         "required": ["city"],
+                #     },
+                # },
                 {
                     "name": "execute_computer_task",
                     "description": "Executes a browser automation task based on a natural language query. Use this for tasks involving web browsing, searching, clicking, typing, or navigating websites.",
@@ -156,6 +156,14 @@ CONFIG = {
                             }
                         },
                         "required": ["query"]
+                    }
+                },
+                {
+                    "name": "stop_computer_task",
+                    "description": "Immediately stops and cancels the currently running browser automation task.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {} # This tool takes no parameters
                     }
                 }
             ]

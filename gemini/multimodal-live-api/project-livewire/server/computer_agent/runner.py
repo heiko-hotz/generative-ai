@@ -1,11 +1,14 @@
 # file: server/computer_agent/runner.py
 import os
+import threading
 from .agent import BrowserAgent
 from .computers.playwright.playwright import PlaywrightComputer
 
 # --- Global State for the Browser ---
 # This variable will hold our single, persistent browser instance.
 browser_env = None
+# This Event will act as our interrupt signal for the agent's thread.
+agent_stop_event = threading.Event()
 
 def run_computer_agent_task(query: str) -> dict:
     """
@@ -18,6 +21,7 @@ def run_computer_agent_task(query: str) -> dict:
     final_summary = "Task completed, but no final summary was generated."
 
     try:
+        agent_stop_event.clear()
         # If the browser isn't open yet, create and initialize it.
         if browser_env is None:
             print("No existing browser found. Creating a new persistent instance...")
@@ -42,7 +46,8 @@ def run_computer_agent_task(query: str) -> dict:
             browser_computer=browser_env,
             query=query,
             model_name='computer-use-exp',
-            verbose=True
+            verbose=True,
+            stop_event=agent_stop_event
         )
         agent.agent_loop()
 
@@ -60,3 +65,7 @@ def run_computer_agent_task(query: str) -> dict:
         import traceback
         traceback.print_exc()
         return {"status": "error", "summary": str(e)}
+
+    finally:
+        print("Clearing stop event flag.")
+        agent_stop_event.clear()
