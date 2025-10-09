@@ -272,7 +272,7 @@ async def process_tool_queue(
                     )
                 )
 
-                tool_result = await execute_tool(function_call.name, function_call.args)
+                tool_result = await execute_tool(function_call.name, function_call.args, session.genai_session)
 
                 # Send function response to client
                 await websocket.send(
